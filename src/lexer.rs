@@ -1,8 +1,3 @@
-use std::{
-    collections::HashMap,
-    sync::{LazyLock, Mutex},
-};
-
 use types::Token;
 
 use crate::types;
@@ -45,7 +40,6 @@ impl Lexer {
             self.position += 1;
             self.read();
         }
-        println!("current char: {}", self.ch);
         let tok = match self.ch {
             '(' => Token::LParen,
             ')' => Token::RParen,
@@ -64,25 +58,12 @@ impl Lexer {
             ']' => Token::RBracket,
             ';' => Token::Semicolon,
             '0'..='9' => {
-                let (start, end) = self.read_string();
+                let (start, end) = self.read_string('0', '9');
                 Token::Int(self.input[start..end].to_string())
             }
             '=' => Token::Eq,
             'a'..='z' | 'A'..='Z' => {
-                self.read_position = self.position;
-                let start = self.position;
-                let mut end = self.position + 1;
-                while self.position < self.input.len() {
-                    let next = self.peek();
-                    match next {
-                        'a'..='z' | 'A'..='Z' => end += 1,
-                        _ => {
-                            self.position = self.read_position - 1;
-                            break;
-                        }
-                    };
-                    self.read_position = end;
-                }
+                let (start, end) = self.read_string_2('a', 'z', 'A', 'Z');
                 Token::get_keyword(&self.input[start..end])
             }
             _ => Token::Illegal,
@@ -91,20 +72,36 @@ impl Lexer {
         tok
     }
 
-    const fn read_string(&mut self, a: char, b: char) -> (usize, usize) {
+    fn read_string_2(&mut self, a: char, b: char, c: char, d: char) -> (usize, usize) {
         self.read_position = self.position;
 
         let start = self.position;
         let mut end = self.position + 1;
         while self.position < self.input.len() {
             let next = self.peek();
-            match next {
-                a..=b => end += 1,
-                _ => {
-                    self.position = self.read_position - 1;
-                    break;
-                }
-            };
+            if a <= next && b >= next || c <= next && d >= next {
+                end += 1
+            } else {
+                self.position = self.read_position - 1;
+                break;
+            }
+            self.read_position = end;
+        }
+        (start, end)
+    }
+    fn read_string(&mut self, a: char, b: char) -> (usize, usize) {
+        self.read_position = self.position;
+
+        let start = self.position;
+        let mut end = self.position + 1;
+        while self.position < self.input.len() {
+            let next = self.peek();
+            if a <= next && b >= next {
+                end += 1
+            } else {
+                self.position = self.read_position - 1;
+                break;
+            }
             self.read_position = end;
         }
         (start, end)
@@ -118,7 +115,7 @@ pub(crate) mod tests {
     #[test]
     fn read_char() {
         let mut lexer = Lexer {
-            input: String::from("999+(){},;hello let"),
+            input: String::from("999+(){},;hello let Hello"),
             position: 0,
             read_position: 0,
             ch: '0',
@@ -134,5 +131,6 @@ pub(crate) mod tests {
         assert_eq!(lexer.next_token(), Token::Semicolon);
         assert_eq!(lexer.next_token(), Token::Ident("hello".to_string()));
         assert_eq!(lexer.next_token(), Token::Let);
+        assert_eq!(lexer.next_token(), Token::Ident("Hello".to_string()));
     }
 }
