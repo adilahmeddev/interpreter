@@ -109,7 +109,7 @@ impl Lexer {
         self.read_position = self.position;
 
         let start = self.position;
-        let mut end = self.position + 1;
+        let mut end = self.position;
         while self.position < self.input.len() {
             let next = self.peek();
             if a <= next && b >= next || c <= next && d >= next {

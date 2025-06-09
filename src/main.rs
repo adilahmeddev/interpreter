@@ -1,7 +1,10 @@
+use std::io::{stdin, stdout};
+
+mod repl;
 mod types;
 
 fn main() {
-    println!("Hello, world!");
+    repl::start(stdin(), stdout());
 }
 
 mod lexer;
