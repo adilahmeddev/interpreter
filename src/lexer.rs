@@ -32,7 +32,7 @@ impl Lexer {
     }
 
     pub(crate) fn next_token(&mut self) -> Token {
-        if self.position == self.input.len() {
+        if self.position >= self.input.len() {
             return Token::Eof;
         }
         self.read();

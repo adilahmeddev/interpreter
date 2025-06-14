@@ -1,7 +1,6 @@
 use crate::{lexer::Lexer, types::Token};
 use std::io::Write;
 
-//
 pub fn start(input: std::io::Stdin, mut output: std::io::Stdout) {
     for line in input.lines() {
         if let Ok(l) = line {
