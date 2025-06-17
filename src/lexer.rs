@@ -81,7 +81,7 @@ impl Lexer {
                 }
             }
             'a'..='z' | 'A'..='Z' => {
-                let (start, end) = self.read_string_2('a', 'z', 'A', 'Z');
+                let (start, end) = self.read_string('a', 'z');
                 Token::get_keyword(&self.input[start..end])
             }
             _ => Token::Illegal,
@@ -105,31 +105,27 @@ impl Lexer {
         self.read_position = self.position;
         (start, end)
     }
-    fn read_string_2(&mut self, a: char, b: char, c: char, d: char) -> (usize, usize) {
-        self.read_position = self.position;
 
-        let start = self.position;
-        let mut end = self.position;
-        while self.position < self.input.len() {
-            let next = self.peek();
-            if a <= next && b >= next || c <= next && d >= next {
-                end += 1
-            } else {
-                self.position = self.read_position - 1;
-                break;
-            }
-            self.read_position = end;
-        }
-        (start, end)
-    }
     fn read_string(&mut self, a: char, b: char) -> (usize, usize) {
         self.read_position = self.position;
-
+        let mut first = a;
+        let mut second = b;
+        if a.is_alphabetic() {
+            if let Some(lower) = a.to_lowercase().next() {
+                first = lower;
+            }
+        }
+        if b.is_alphabetic() {
+            if let Some(lower) = b.to_lowercase().next() {
+                second = lower;
+            }
+        }
         let start = self.position;
         let mut end = self.position;
         while self.position < self.input.len() {
-            let next = self.peek();
-            if a <= next && b >= next {
+            let mut next = self.peek();
+            next = next.to_lowercase().next().unwrap_or(next);
+            if first <= next && second >= next {
                 end += 1
             } else {
                 self.position = self.read_position - 1;
@@ -171,7 +167,7 @@ pub(crate) mod tests {
     #[test]
     fn read_char() {
         let mut lexer = Lexer {
-            input: String::from("999+ ! (){},;hello let = Hello == != \"string hello\""),
+            input: String::from("999+ ! (){},;hello lEt = Hello == != \"string hello\""),
             position: 0,
             read_position: 0,
             ch: '0',
